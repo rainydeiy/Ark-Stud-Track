@@ -61,13 +61,22 @@ a {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 12px;
+  gap: 12px;  
+  font-size: 0.85rem;
+  margin-top: 4px;
 }
 
 .task-card .meta {
   color: #6b7280;
-  font-size: 0.85rem;
-  margin-top: 4px;
+
+}
+
+.task-card .mendekati-deadline {
+  color: #ff7700;
+}
+
+.task-card .overdue {
+  color: #ff0000;
 }
 
 .badge {
@@ -86,6 +95,11 @@ a {
 .badge.selesai {
   background: #d1fae5;
   color: #065f46;
+}
+
+.badge.terlambat {
+  background: #a5a6a6;
+  color: #000;
 }
 
 form {
