@@ -19,7 +19,14 @@ import { fileURLToPath } from "url";
 import bcrypt from "bcryptjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const SEED_PATH = path.join(__dirname, "db.json");
 const DB_PATH = path.join(__dirname, "db.json");
+
+function pastikanDB() {
+  if (DB_PATH !== SEED_PATH && !fs.existsSync(DB_PATH) && fs.existsSync(SEED_PATH)) {
+    fs.copyFileSync(SEED_PATH, DB_PATH);
+  }
+}
 
 /**
  * Membuat data awal (seed) yang sesuai dengan contoh data pada dokumen studi
@@ -81,6 +88,7 @@ function seedData() {
  * @returns {object} Isi database.
  */
 export function readDB() {
+  pastikanDB();
   if (!fs.existsSync(DB_PATH)) {
     writeDB(seedData());
   }
