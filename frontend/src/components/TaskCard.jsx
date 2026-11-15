@@ -6,8 +6,8 @@ import React from "react";
  * @param {string} deadline Tanggal dan jam deadline dari API.
  * @returns {string}
  */
-function formatDeadline(deadline) {
-  const d = new Date(deadline);
+function formatTanggal(tanggal) {
+  const d = new Date(tanggal);
   return d.toLocaleString("id-ID", {
     day: "2-digit",
     month: "short",
@@ -32,21 +32,35 @@ function formatDeadline(deadline) {
  * komponen ini), tergantung rancangan Anda.
  */
 export default function TaskCard({ task, onToggleStatus, onDelete }) {
+  
+  const statusLabel = {
+    belum: "Belum",
+    "mendekati deadline": "Mendekati Deadline",
+    overdue: "Overdue",
+    "dikumpulkan terlambat": "Dikumpulkan Terlambat",
+    selesai: "Selesai",
+  };
+
+  const status = task.status ?? "belum";
+  const dikumpulkan = status === "selesai" || status === "dikumpulkan terlambat";
+  const statusClass = status.replace(/\s+/g, "-");
+
   return (
-    <div className="card task-card">
+    <div className={`card task-card ${statusClass}`}>
       <div>
         <strong>{task.judul}</strong>
         <div className="meta">{task.mata_kuliah}</div>
-        <div className="meta">Deadline: {formatDeadline(task.deadline)}</div>
+        <div className="meta">Deadline: {formatTanggal(task.deadline)}</div>
+        {task.submitted_at && (<div className="meta">Dikumpulkan: {formatTanggal(task.submitted_at)}</div>)}
         {task.deskripsi && <div className="meta">{task.deskripsi}</div>}
       </div>
       <div style={{ textAlign: "right" }}>
-        <span className={`badge ${task.status}`}>
-          {task.status === "selesai" ? "Selesai" : "Belum"}
+        <span className={`badge ${statusClass}`}>
+          {statusLabel[status] ?? status}
         </span>
         <div style={{ marginTop: 10, display: "flex", gap: 8 }}>
           <button className="btn" onClick={() => onToggleStatus(task)}>
-            {task.status === "selesai" ? "Tandai Belum" : "Tandai Selesai"}
+            {dikumpulkan ? "Tandai Belum" : "Tandai Selesai"}
           </button>
           <button className="btn" onClick={() => onDelete(task.id)}>
             Hapus

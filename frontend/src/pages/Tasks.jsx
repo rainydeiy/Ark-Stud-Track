@@ -45,7 +45,8 @@ export default function Tasks() {
   }
 
   async function handleToggleStatus(task) {
-    const newStatus = task.status === "selesai" ? "belum" : "selesai";
+    const newStatus = task.status === "selesai" || task.status === "dikumpulkan terlambat"
+    ? "belum" : "selesai";
     await api.put(`/tasks/${task.id}`, { status: newStatus });
     loadData();
   }
