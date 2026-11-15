@@ -67,16 +67,22 @@ a {
 }
 
 .task-card .meta {
+  background-color: white;
   color: #6b7280;
 
 }
 
-.task-card .mendekati-deadline {
-  color: #ff7700;
+.task-card.mendekati-deadline {
+  border: 10px solid #ff7700b3;
 }
 
-.task-card .overdue {
-  color: #ff0000;
+.task-card.overdue {
+  border: solid 10px #ff0000b3;
+}
+
+.task-card.mendekati-deadline .meta,
+.task-card.overdue .meta {
+  color: #1f2430;
 }
 
 .badge {
@@ -85,6 +91,11 @@ a {
   border-radius: 999px;
   font-size: 0.75rem;
   font-weight: 600;
+}
+
+.badge.mendekati-deadline {
+  background: #fef2e2;
+  color: #e85100b3;
 }
 
 .badge.belum {
@@ -97,9 +108,14 @@ a {
   color: #065f46;
 }
 
-.badge.terlambat {
+.badge.dikumpulkan-terlambat {
   background: #a5a6a6;
   color: #000;
+}
+
+.badge.overdue {
+  background: #fee2e2;
+  color: #991b1b;
 }
 
 form {
