@@ -7,6 +7,40 @@ const router = Router();
 // Seluruh endpoint tugas membutuhkan login.
 router.use(requireAuth);
 
+/** MENAMBAHKAN LOGIC UNTUK STATUS TUGAS YANG 
+OVERDUE ATAU MENDEKATI DEADLINE **/
+
+function hitungWaktu(task){
+  if(task.status==="selesai"||task.status==="dikumpulkan terlambat"){
+    return task.status;
+  }
+  
+  const sekarang = new Date();
+  const deadline = new Date(task.deadline);
+  const sisaWaktu = (deadline - sekarang) / (1000 * 60 * 60);
+
+  if (sekarang > deadline){
+    return "overdue";
+  }
+
+  if (sisaWaktu <= 24){
+    return "mendekati deadline";
+  }
+
+  return "belum";
+}
+
+function denganStatus(task) {
+  return { ...task, status: hitungWaktu(task), submitted_at : task.submitted_at ?? null, };
+}
+
+function prioritasStatus(status) {
+  if (status === "overdue") return 0;
+  if (status === "mendekati deadline") return 1;
+  if (status === "belum") return 2;
+  return 3;
+}
+
 /**
  * GET /api/tasks
  * Daftar seluruh tugas milik pengguna yang sedang login, lintas semua mata
@@ -27,9 +61,14 @@ router.get("/", (req, res) => {
     .filter((t) => t.user_id === req.user.id)
     .map((t) => {
       const course = db.courses.find((c) => c.id === t.mata_kuliah_id);
-      return { ...t, mata_kuliah: course ? course.name : null };
+      return { ...denganStatus(t), mata_kuliah: course ? course.name : null};
     })
-    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    .sort((a, b) => {
+      const selisihPrioritas = prioritasStatus(a.status) - prioritasStatus(b.status);
+      if (selisihPrioritas !== 0) return selisihPrioritas;
+
+      return new Date(b.created_at) - new Date(a.created_at);
+    });
 
   res.json({ tasks });
 });
@@ -77,11 +116,12 @@ router.post("/", (req, res) => {
     deskripsi: deskripsi || "",
     deadline,
     status: "belum",
+    submitted_at : null,
     created_at: new Date().toISOString()
   };
   db.tasks.push(newTask);
   writeDB(db);
-  res.status(201).json({ task: newTask });
+  res.status(201).json({ task: denganStatus(newTask) });
 });
 
 /**
@@ -101,18 +141,33 @@ router.put("/:id", (req, res) => {
   }
 
   const { judul, deskripsi, deadline, status } = req.body;
+  
+  if (status !== undefined && !["belum", "selesai"].includes(status)) {
+    return res.status(400).json({ error: "Status tidak valid." });
+  }
+  
   if (judul !== undefined) task.judul = judul;
   if (deskripsi !== undefined) task.deskripsi = deskripsi;
   if (deadline !== undefined) task.deadline = deadline;
   if (status !== undefined) {
-    if (!["belum", "selesai"].includes(status)) {
-      return res.status(400).json({ error: "Status hanya boleh 'belum' atau 'selesai'." });
+    if (status === "selesai"){
+      const dikumpulkan = task.status === "selesai" || task.status === "dikumpulkan terlambat";    
+    
+      if (!dikumpulkan){
+        const sekarang = new Date();
+        task.submitted_at = sekarang.toISOString();
+        task.status = sekarang > new Date(task.deadline) ? "dikumpulkan terlambat" : "selesai";
+      }
     }
-    task.status = status;
+    else {
+      task.status = "belum";
+      task.submitted_at = null;
+    }
   }
   writeDB(db);
-  res.json({ task });
+  res.json({ task: denganStatus(task) });
 });
+
 
 /**
  * DELETE /api/tasks/:id
